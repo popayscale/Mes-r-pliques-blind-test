@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Répliques de Films Culte</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "sweetalert2": "https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="timer"></div>
+    <div id="main-container">
+        <div id="quote-section">
+            <div id="quote-container">
+                <p id="quote">Clique sur le bouton pour créer un quizz puis sur démarrer !</p>
+                <div id="question-counter"></div>
+                <div id="answer-container">
+                    Le film est: <span id="answer"></span>
+                </div>
+                <button id="create-quiz-button" class="btn btn-primary">Créer un quiz</button>
+                <button id="start-button" class="btn btn-primary">Démarrer</button>
+                <button id="pause-button" class="btn btn-secondary">Pause compteur</button>
+                <button id="reset-button" class="btn btn-warning">Reset compteur</button>
+                <button id="skip-button" class="btn btn-info">Réponse</button>
+                <button id="stop-quiz-button" class="btn btn-danger">Arrêter le quiz</button>
+                <button id="next-question-button" class="btn btn-success">Réplique suivante</button>
+            </div>
+        </div>
+        <div id="youtube-section">
+            <div id="youtube-container">
+                <iframe id="youtube-video" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+    <div id="overlay"></div>
+
+    <div id="settings-menu">
+        <h2>Paramètres du Quiz</h2>
+        <div id="game-session-length-container">
+            <label for="game-session-length">Nombre de Questions:</label>
+            <input type="number" id="game-session-length" value="2" min="1" max="100">
+        </div>
+        <div id="quotes-editor"></div>
+        <button id="save-settings-button" class="btn btn-success">Enregistrer</button>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

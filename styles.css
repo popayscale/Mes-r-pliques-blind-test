@@ -1,0 +1,228 @@
+body {
+    font-family: 'Georgia', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #f0f4f8, #d9e2ef);
+    color: #333;
+}
+
+#main-container {
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    margin: 20px auto;
+    gap: 20px;
+}
+
+#quote-section, #youtube-section {
+    width: 48%;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+#quote-container {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#quote {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+#question-counter {
+    font-size: 1.4em;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+#timer {
+    display: block;
+    font-size: 1.6em;
+    color: #555;
+    border-radius: 4px;
+    border: black;
+}
+
+#answer-container {
+    font-size: 1.5em;
+    margin-top: 20px;
+    color: #777;
+}
+
+#youtube-container {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    border-radius: 12px;
+}
+
+#main-container.answer-time iframe {
+    opacity: 1;
+}
+
+button {
+    margin: 5px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    width: calc(50% - 10px);
+    box-sizing: border-box;
+}
+
+button.btn-primary {
+    background-color: #555;
+    color: #fff;
+}
+
+button.btn-primary:hover {
+    background-color: #333;
+}
+
+button.btn-secondary {
+    background-color: #777;
+    color: #fff;
+}
+
+button.btn-secondary:hover {
+    background-color: #555;
+}
+
+button.btn-warning {
+    background-color: #f39c12;
+    color: #fff;
+}
+
+button.btn-warning:hover {
+    background-color: #e08e0b;
+}
+
+button.btn-info {
+    background-color: #3498db;
+    color: #fff;
+}
+
+button.btn-info:hover {
+    background-color: #2980b9;
+}
+
+button.btn-success {
+    background-color: #2ecc71;
+    color: #fff;
+}
+
+button.btn-success:hover {
+    background-color: #27ae60;
+}
+
+button.btn-danger {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+button.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+#settings-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none;
+    width: 80%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#settings-menu h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.quote-item {
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.quote-item label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.quote-item textarea,
+.quote-item input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    font-family: 'Georgia', serif;
+}
+
+#game-session-length-container {
+    margin-top: 20px;
+}
+
+#game-session-length-container label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #333;
+}
+
+#save-settings-button {
+    display: block;
+    margin: 20px auto 0;
+    background-color: #555;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+#save-settings-button:hover {
+    background-color: #333;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+}
