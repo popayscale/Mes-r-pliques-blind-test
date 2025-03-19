@@ -75,6 +75,13 @@ function convertToEmbedUrl(url, startTime) {
     if (match) {
         videoId = match[1];
     }
+
+    // Convertir le time code en secondes si nécessaire
+    if (typeof startTime === 'string') {
+        let [minutes, seconds] = startTime.split(':').map(Number);
+        startTime = minutes * 60 + seconds;
+    }
+
     return `https://www.youtube-nocookie.com/embed/${videoId}?start=${startTime}&enablejsapi=1&autoplay=1&controls=0`;
 }
 
@@ -331,7 +338,7 @@ quotesEditor.addEventListener('input', (event) => {
     if (event.target.id.startsWith('youtubeUrl-')) {
         const index = event.target.id.split('-')[1];
         const startTimeInput = document.getElementById(`startTime-${index}`);
-        const startTime = startTimeInput.value || 0;
+        const startTime = startTimeInput.value || "0:00";
         const youtubeUrl = event.target.value;
 
         // Ensure quotes array is initialized
@@ -371,8 +378,8 @@ function loadQuotesEditor() {
             <input type="text" id="answer-${i}" value="${quotes[i]?.answer || ''}">
             <label for="youtubeUrl-${i}">URL YouTube:</label>
             <input type="text" id="youtubeUrl-${i}" value="${quotes[i]?.youtubeUrl?.replace(/\?.*$/, '') || ''}">
-            <label for="startTime-${i}">Temps de début (secondes):</label>
-            <input type="number" id="startTime-${i}" value="${quotes[i]?.startTime || 0}" min="0">
+            <label for="startTime-${i}">Temps de début (minutes:secondes):</label>
+            <input type="text" id="startTime-${i}" value="${quotes[i]?.startTime || '0:00'}" placeholder="0:00">
         `;
         quotesEditor.appendChild(quoteItem);
     }
@@ -384,7 +391,7 @@ function saveSettings() {
 
     for (let i = 0; i < numberOfQuotes; i++) {
         const youtubeUrl = document.getElementById(`youtubeUrl-${i}`).value;
-        const startTime = parseInt(document.getElementById(`startTime-${i}`).value, 10) || 0;
+        const startTime = document.getElementById(`startTime-${i}`).value || "0:00";
         const embedUrl = convertToEmbedUrl(youtubeUrl, startTime);
 
         quotes.push({
