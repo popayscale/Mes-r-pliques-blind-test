@@ -32,9 +32,6 @@ const overlay = document.getElementById('overlay');
 const quotesEditor = document.getElementById('quotes-editor');
 const gameSessionLengthInput = document.getElementById('game-session-length');
 const saveSettingsButton = document.getElementById('save-settings-button');
-const endScreen = document.getElementById('end-screen');
-const replayButton = document.getElementById('replay-button');
-const newQuizButton = document.getElementById('new-quiz-button');
 
 // Fonctions utilitaires
 function convertTimeToSeconds(time) {
@@ -77,8 +74,6 @@ function loadYouTubeAPI() {
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    } else {
-        onYouTubeIframeAPIReady();
     }
 }
 
@@ -143,12 +138,6 @@ function loadQuote() {
         loadYouTubeAPI();
 
         const initializePlayer = () => {
-            const iframe = document.getElementById('youtube-video');
-            if (!iframe) {
-                console.error("L'iframe YouTube n'est pas attaché au DOM.");
-                return;
-            }
-
             if (typeof YT !== 'undefined' && YT.Player) {
                 try {
                     player = new YT.Player('youtube-video', {
@@ -230,9 +219,6 @@ function onPlayerStateChange(event) {
 function onPlayerError(event) {
     console.error("Erreur du lecteur YouTube:", event.data);
     youtubeContainer.innerHTML = '<div class="error-message">Erreur de chargement de la vidéo</div>';
-    if (event.data === 150) {
-        console.error("L'élément HTML spécifié ne contient pas de lecteur YouTube.");
-    }
 }
 
 function startTimer() {
@@ -331,14 +317,6 @@ function showFinalAnswer() {
     stopQuizButton.disabled = false;
 
     stopVideo();
-
-    // Afficher l'écran de fin après un court délai
-    setTimeout(showEndScreen, 2000);
-}
-
-function showEndScreen() {
-    endScreen.style.display = 'block';
-    mainContainer.style.display = 'none';
 }
 
 function startGameSession() {
@@ -501,18 +479,6 @@ nextQuestionButton.addEventListener('click', () => {
 
 stopQuizButton.addEventListener('click', () => {
     endGameSession();
-});
-
-replayButton.addEventListener('click', () => {
-    endScreen.style.display = 'none';
-    mainContainer.style.display = 'block';
-    startGameSession();
-});
-
-newQuizButton.addEventListener('click', () => {
-    endScreen.style.display = 'none';
-    mainContainer.style.display = 'block';
-    openSettingsMenu();
 });
 
 saveSettingsButton.addEventListener('click', () => {
