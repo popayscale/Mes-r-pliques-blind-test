@@ -18,7 +18,6 @@ const questionCounterElement = document.getElementById('question-counter');
 const timerElement = document.getElementById('timer');
 const answerContainer = document.getElementById('answer-container');
 const answerElement = document.getElementById('answer');
-const youtubeVideo = document.getElementById('youtube-video');
 const youtubeContainer = document.getElementById('youtube-container');
 const createQuizButton = document.getElementById('create-quiz-button');
 const startButton = document.getElementById('start-button');
@@ -33,6 +32,9 @@ const overlay = document.getElementById('overlay');
 const quotesEditor = document.getElementById('quotes-editor');
 const gameSessionLengthInput = document.getElementById('game-session-length');
 const saveSettingsButton = document.getElementById('save-settings-button');
+const endScreen = document.getElementById('end-screen');
+const replayButton = document.getElementById('replay-button');
+const newQuizButton = document.getElementById('new-quiz-button');
 
 // Fonctions utilitaires
 function convertTimeToSeconds(time) {
@@ -54,7 +56,6 @@ function convertToEmbedUrl(url, startTime) {
         startTime = convertTimeToSeconds(startTime);
     }
 
-    // Utiliser les paramètres d'API pour un meilleur contrôle
     return `https://www.youtube-nocookie.com/embed/${videoId}?start=${startTime}&enablejsapi=1&autoplay=1&controls=0&mute=0&loop=0&playlist=${videoId}&origin=${window.location.origin}`;
 }
 
@@ -62,8 +63,7 @@ function convertToEmbedUrl(url, startTime) {
 function onYouTubeIframeAPIReady() {
     isYouTubeAPIReady = true;
     console.log("API YouTube prête");
-    
-    // Si un callback est en attente, l'exécuter
+
     if (playerReadyCallback) {
         playerReadyCallback();
         playerReadyCallback = null;
@@ -77,6 +77,8 @@ function loadYouTubeAPI() {
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    } else {
+        onYouTubeIframeAPIReady();
     }
 }
 
@@ -88,24 +90,22 @@ function loadQuote() {
     }
 
     const currentQuote = quotes[currentQuoteIndex];
-    
+
     if (!currentQuote) {
         console.error("Citation non trouvée à l'index:", currentQuoteIndex);
         showFinalAnswer();
         return;
     }
-    
+
     quoteElement.textContent = currentQuote.quote || "Question sans texte";
     answerElement.textContent = currentQuote.answer || "Pas de réponse fournie";
 
-    // Réinitialiser l'état de pause au chargement d'une nouvelle question
     isPaused = false;
     pauseButton.textContent = 'Pause';
 
     let youtubeUrl = currentQuote.youtubeUrl || "";
     currentStartTime = currentQuote.startTime || "0:00";
 
-    // Nettoyer proprement le player précédent
     if (player) {
         try {
             player.destroy();
@@ -118,19 +118,17 @@ function loadQuote() {
     if (!youtubeUrl) {
         youtubeContainer.style.display = 'none';
     } else {
-        // Préparer l'URL d'intégration
         if (!youtubeUrl.includes('embed')) {
             youtubeUrl = convertToEmbedUrl(youtubeUrl, currentStartTime);
         } else if (!youtubeUrl.includes('enablejsapi=1')) {
             youtubeUrl += (youtubeUrl.includes('?') ? '&' : '?') + 'enablejsapi=1&autoplay=1&controls=0&mute=0';
         }
 
-        // Recréer l'iframe pour éviter les problèmes de réutilisation
         const oldIframe = document.getElementById('youtube-video');
         if (oldIframe) {
             oldIframe.remove();
         }
-        
+
         const newIframe = document.createElement('iframe');
         newIframe.id = 'youtube-video';
         newIframe.setAttribute('width', '100%');
@@ -141,12 +139,16 @@ function loadQuote() {
         newIframe.src = youtubeUrl;
         youtubeContainer.appendChild(newIframe);
         youtubeContainer.style.display = 'block';
-        
-        // Assurer que l'API YouTube est chargée
+
         loadYouTubeAPI();
-        
-        // Fonction pour initialiser le player une fois l'API prête
+
         const initializePlayer = () => {
+            const iframe = document.getElementById('youtube-video');
+            if (!iframe) {
+                console.error("L'iframe YouTube n'est pas attaché au DOM.");
+                return;
+            }
+
             if (typeof YT !== 'undefined' && YT.Player) {
                 try {
                     player = new YT.Player('youtube-video', {
@@ -165,9 +167,7 @@ function loadQuote() {
             }
         };
 
-        // Vérifier si l'API est déjà prête ou planifier l'initialisation
         if (isYouTubeAPIReady) {
-            // Attendre que l'iframe soit complètement chargée
             setTimeout(initializePlayer, 300);
         } else {
             playerReadyCallback = () => setTimeout(initializePlayer, 300);
@@ -182,7 +182,7 @@ function loadQuote() {
     nextQuestionButton.style.display = 'none';
     timerElement.textContent = `${timeLeft}`;
     skipButton.style.display = 'inline-block';
-    
+
     startTimer();
 }
 
@@ -193,7 +193,7 @@ function onPlayerReady(event) {
             event.target.setVolume(100);
             const startTimeInSeconds = convertTimeToSeconds(currentStartTime);
             event.target.seekTo(startTimeInSeconds, true);
-            
+
             if (!isPaused) {
                 setTimeout(() => {
                     if (player && typeof player.playVideo === 'function') {
@@ -210,7 +210,6 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
-    // Synchroniser l'état du jeu avec l'état de la vidéo
     if (event && event.data === YT.PlayerState.PAUSED && !isPaused) {
         isPaused = true;
         pauseButton.textContent = 'Reprendre';
@@ -231,13 +230,15 @@ function onPlayerStateChange(event) {
 function onPlayerError(event) {
     console.error("Erreur du lecteur YouTube:", event.data);
     youtubeContainer.innerHTML = '<div class="error-message">Erreur de chargement de la vidéo</div>';
+    if (event.data === 150) {
+        console.error("L'élément HTML spécifié ne contient pas de lecteur YouTube.");
+    }
 }
 
 function startTimer() {
     clearInterval(timerInterval);
     clearInterval(answerTimeout);
 
-    // Assurer que la vidéo est synchronisée avec l'état du jeu
     if (!isPaused && player && typeof player.playVideo === 'function') {
         player.playVideo();
     } else if (isPaused && player && typeof player.pauseVideo === 'function') {
@@ -259,11 +260,10 @@ function startTimer() {
 
 function showAnswer() {
     answerContainer.style.display = 'block';
-    // Garder la vidéo visible pendant la phase de réponse
     youtubeContainer.style.display = 'block';
-    
+
     clearInterval(timerInterval);
-    
+
     pauseButton.disabled = false;
     skipButton.disabled = true;
     resetButton.disabled = false;
@@ -271,7 +271,7 @@ function showAnswer() {
 
     answerTimeLeft = 30;
     updateAnswerTimer();
-    
+
     clearInterval(answerTimeout);
     answerTimeout = setInterval(updateAnswerTimer, 1000);
 
@@ -282,8 +282,7 @@ function showAnswer() {
     }
 
     skipButton.style.display = 'none';
-    
-    // S'assurer que la vidéo continue de jouer pendant la phase de réponse
+
     if (!isPaused && player && typeof player.playVideo === 'function') {
         player.playVideo();
     }
@@ -316,10 +315,10 @@ function loadNextQuote() {
 function showFinalAnswer() {
     answerContainer.style.display = 'block';
     youtubeContainer.style.display = 'none';
-    
+
     clearInterval(timerInterval);
     clearInterval(answerTimeout);
-    
+
     pauseButton.disabled = true;
     skipButton.disabled = true;
     resetButton.disabled = true;
@@ -330,9 +329,16 @@ function showFinalAnswer() {
     nextQuestionButton.style.display = 'none';
     startButton.disabled = true;
     stopQuizButton.disabled = false;
-    
-    // Arrêter proprement la vidéo à la fin
+
     stopVideo();
+
+    // Afficher l'écran de fin après un court délai
+    setTimeout(showEndScreen, 2000);
+}
+
+function showEndScreen() {
+    endScreen.style.display = 'block';
+    mainContainer.style.display = 'none';
 }
 
 function startGameSession() {
@@ -341,7 +347,7 @@ function startGameSession() {
         openSettingsMenu();
         return;
     }
-    
+
     isPaused = false;
     pauseButton.textContent = 'Pause';
     currentQuoteIndex = 0;
@@ -351,8 +357,7 @@ function startGameSession() {
 function endGameSession() {
     clearInterval(timerInterval);
     clearInterval(answerTimeout);
-    
-    // Arrêter proprement la vidéo avant de recharger la page
+
     if (player) {
         try {
             if (typeof player.stopVideo === 'function') {
@@ -364,12 +369,10 @@ function endGameSession() {
             console.error("Erreur lors de l'arrêt de la vidéo:", e);
         }
     }
-    
-    // Rafraîchir la page
+
     location.reload();
 }
 
-// Fonctions de contrôle de la vidéo améliorées
 function pauseVideo() {
     if (player && typeof player.pauseVideo === 'function') {
         try {
@@ -415,8 +418,7 @@ function resetVideo() {
             const startTimeInSeconds = convertTimeToSeconds(currentStartTime);
             player.seekTo(startTimeInSeconds, true);
             console.log(`Vidéo réinitialisée à ${startTimeInSeconds} secondes`);
-            
-            // S'assurer que la vidéo est en lecture ou en pause selon l'état du jeu
+
             if (!isPaused) {
                 playVideo();
             } else {
@@ -441,7 +443,7 @@ startButton.addEventListener('click', () => {
         openSettingsMenu();
         return;
     }
-    
+
     startButton.disabled = true;
     createQuizButton.disabled = true;
     stopQuizButton.disabled = false;
@@ -453,15 +455,13 @@ startButton.addEventListener('click', () => {
 
 pauseButton.addEventListener('click', () => {
     isPaused = !isPaused;
-    
+
     if (isPaused) {
-        // Mettre en pause le jeu et la vidéo
         clearInterval(timerInterval);
         clearInterval(answerTimeout);
         pauseVideo();
         pauseButton.textContent = 'Reprendre';
     } else {
-        // Reprendre le jeu et la vidéo
         if (!mainContainer.classList.contains('answer-time')) {
             startTimer();
         } else {
@@ -474,22 +474,18 @@ pauseButton.addEventListener('click', () => {
 });
 
 resetButton.addEventListener('click', () => {
-    // Réinitialiser le minuteur selon la phase actuelle
     if (!mainContainer.classList.contains('answer-time')) {
-        // Phase de question
         timeLeft = 30;
         timerElement.textContent = `${timeLeft}`;
         clearInterval(timerInterval);
         startTimer();
     } else {
-        // Phase de réponse
         answerTimeLeft = 30;
         timerElement.textContent = `${answerTimeLeft}`;
         clearInterval(answerTimeout);
         answerTimeout = setInterval(updateAnswerTimer, 1000);
     }
-    
-    // Réinitialiser la vidéo au temps de début spécifié pour la question actuelle
+
     resetVideo();
 });
 
@@ -505,6 +501,18 @@ nextQuestionButton.addEventListener('click', () => {
 
 stopQuizButton.addEventListener('click', () => {
     endGameSession();
+});
+
+replayButton.addEventListener('click', () => {
+    endScreen.style.display = 'none';
+    mainContainer.style.display = 'block';
+    startGameSession();
+});
+
+newQuizButton.addEventListener('click', () => {
+    endScreen.style.display = 'none';
+    mainContainer.style.display = 'block';
+    openSettingsMenu();
 });
 
 saveSettingsButton.addEventListener('click', () => {
@@ -537,16 +545,15 @@ function loadQuotesEditor() {
         gameSessionLengthInput.value = 1;
         return;
     }
-    
+
     quotesEditor.innerHTML = '';
 
     for (let i = 0; i < numberOfQuotes; i++) {
         const quoteItem = document.createElement('div');
         quoteItem.classList.add('quote-item');
 
-        // Format minutes:secondes pour le temps de début
         let displayStartTime = quotes[i]?.startTime || '0:00';
-        
+
         quoteItem.innerHTML = `
             <h3>Réplique ${i + 1}</h3>
             <label for="quote-${i}">Réplique:</label>
@@ -563,61 +570,57 @@ function loadQuotesEditor() {
     }
 }
 
-// Validation des champs obligatoires
 function validateSettings() {
     const numberOfQuotes = parseInt(gameSessionLengthInput.value, 10);
     if (isNaN(numberOfQuotes) || numberOfQuotes < 1) {
         Swal.fire('Veuillez entrer un nombre valide de questions.');
         return false;
     }
-    
+
     for (let i = 0; i < numberOfQuotes; i++) {
         const quoteInput = document.getElementById(`quote-${i}`);
         const answerInput = document.getElementById(`answer-${i}`);
         const youtubeUrlInput = document.getElementById(`youtubeUrl-${i}`);
-        
+
         if (!quoteInput || !answerInput || !youtubeUrlInput) {
             console.error("Éléments manquants pour la question", i);
             continue;
         }
-        
-        // Vérification des champs obligatoires (sauf le timer)
+
         if (!quoteInput.value.trim()) {
             Swal.fire(`Veuillez saisir le texte de la réplique ${i+1}.`);
             return false;
         }
-        
+
         if (!answerInput.value.trim()) {
             Swal.fire(`Veuillez saisir la réponse pour la réplique ${i+1}.`);
             return false;
         }
-        
+
         if (!youtubeUrlInput.value.trim()) {
             Swal.fire(`Veuillez saisir l'URL YouTube pour la réplique ${i+1}.`);
             return false;
         }
-        
-        // Validation de l'URL YouTube
+
         const youtubeUrl = youtubeUrlInput.value;
         if (!youtubeUrl.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)) {
             Swal.fire(`L'URL YouTube pour la réplique ${i+1} n'est pas valide.`);
             return false;
         }
-        
-        // Vérification optionnelle du format de temps
+
         const startTimeInput = document.getElementById(`startTime-${i}`);
         if (startTimeInput && startTimeInput.value && !/^\d+:[0-5]\d$/.test(startTimeInput.value)) {
             Swal.fire(`Format de temps invalide pour la réplique ${i+1}. Utilisez le format minutes:secondes (ex: 1:30)`);
             return false;
         }
     }
-    
+
     return true;
 }
 
 function saveSettings() {
     const numberOfQuotes = parseInt(gameSessionLengthInput.value, 10);
-    
+
     quotes = [];
 
     for (let i = 0; i < numberOfQuotes; i++) {
@@ -625,15 +628,15 @@ function saveSettings() {
         const answerInput = document.getElementById(`answer-${i}`);
         const youtubeUrlInput = document.getElementById(`youtubeUrl-${i}`);
         const startTimeInput = document.getElementById(`startTime-${i}`);
-        
+
         if (!quoteInput || !answerInput || !youtubeUrlInput || !startTimeInput) {
             console.error("Éléments manquants pour la question", i);
             continue;
         }
-        
+
         const youtubeUrl = youtubeUrlInput.value;
         const startTime = startTimeInput.value || "0:00";
-        
+
         quotes.push({
             quote: quoteInput.value,
             answer: answerInput.value,
@@ -646,7 +649,6 @@ function saveSettings() {
     saveToLocalStorage();
 }
 
-// Fonctions pour la persistance des données
 function saveToLocalStorage() {
     try {
         localStorage.setItem('blindTestQuotes', JSON.stringify(quotes));
@@ -660,11 +662,11 @@ function loadFromLocalStorage() {
     try {
         const savedQuotes = localStorage.getItem('blindTestQuotes');
         const savedSessionLength = localStorage.getItem('blindTestSessionLength');
-        
+
         if (savedQuotes) {
             quotes = JSON.parse(savedQuotes);
         }
-        
+
         if (savedSessionLength) {
             gameSessionLength = parseInt(savedSessionLength, 10);
         }
@@ -692,13 +694,10 @@ youtubeContainer.addEventListener('dblclick', (event) => {
     event.stopPropagation();
 });
 
-// S'assurer que l'API YouTube est chargée
 loadYouTubeAPI();
 
-// Chargement des données sauvegardées au démarrage
 document.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
 });
 
-// Définir la fonction onYouTubeIframeAPIReady au niveau global pour que l'API puisse l'appeler
 window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
